@@ -167,13 +167,13 @@
         </div>
     </div>
 
-    <script>
+   <script>
 const players = JSON.parse(localStorage.getItem("players")) || {};
 const matchHistory = JSON.parse(localStorage.getItem("matchHistory")) || [];
 const playerSelects = document.querySelectorAll("#player1, #player2");
 const scoreboardBody = document.getElementById("scoreboard-body");
 const matchHistoryBody = document.getElementById("match-history-body");
-const K = 10;
+const K = 20;
 
 function saveData() {
     localStorage.setItem("players", JSON.stringify(players));
@@ -186,16 +186,22 @@ function addPlayer() {
 
     players[playerName] = { elo: 1000 };
 
-    playerSelects.forEach(select => {
-        const option = document.createElement("option");
-        option.value = playerName;
-        option.textContent = playerName;
-        select.appendChild(option);
-    });
-
+    refreshPlayerList();
     updateScoreboard();
     saveData();
     document.getElementById("new-player-name").value = "";
+}
+
+function refreshPlayerList() {
+    playerSelects.forEach(select => {
+        select.innerHTML = "";
+        Object.keys(players).forEach(player => {
+            const option = document.createElement("option");
+            option.value = player;
+            option.textContent = player;
+            select.appendChild(option);
+        });
+    });
 }
 
 function submitMatch() {
@@ -264,10 +270,15 @@ function importData(event) {
     const reader = new FileReader();
     reader.onload = (e) => {
         const data = JSON.parse(e.target.result);
+
+        Object.keys(players).forEach(player => delete players[player]);
+        matchHistory.splice(0, matchHistory.length);
+
         Object.assign(players, data.players);
-        matchHistory.splice(0, matchHistory.length, ...data.matchHistory);
+        matchHistory.push(...data.matchHistory);
 
         saveData();
+        refreshPlayerList();
         updateScoreboard();
         loadMatchHistory();
     };
@@ -275,15 +286,7 @@ function importData(event) {
 }
 
 function initialize() {
-    Object.keys(players).forEach(player => {
-        playerSelects.forEach(select => {
-            const option = document.createElement("option");
-            option.value = player;
-            option.textContent = player;
-            select.appendChild(option);
-        });
-    });
-
+    refreshPlayerList();
     updateScoreboard();
     loadMatchHistory();
 }
