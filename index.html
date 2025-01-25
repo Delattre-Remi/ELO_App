@@ -141,6 +141,7 @@
         <table>
             <thead>
                 <tr>
+						<th>Rank</th>
                     <th>Player</th>
                     <th>ELO</th>
                 </tr>
@@ -167,7 +168,7 @@
         </div>
     </div>
 
-   <script>
+<script>
 const players = JSON.parse(localStorage.getItem("players")) || {};
 const matchHistory = JSON.parse(localStorage.getItem("matchHistory")) || [];
 const playerSelects = document.querySelectorAll("#player1, #player2");
@@ -236,9 +237,9 @@ function updateScoreboard() {
     scoreboardBody.innerHTML = "";
     const sortedPlayers = Object.entries(players).sort(([, a], [, b]) => b.elo - a.elo);
 
-    sortedPlayers.forEach(([player, { elo }]) => {
+    sortedPlayers.forEach(([player, { elo }], index) => {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${player}</td><td>${Math.round(elo)}</td>`;
+        row.innerHTML = `<td>${index + 1}</td><td>${player}</td><td>${Math.round(elo)}</td>`;
         scoreboardBody.appendChild(row);
     });
 }
