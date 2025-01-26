@@ -139,15 +139,18 @@
 
         <h2>Scoreboard</h2>
         <table>
-            <thead>
-                <tr>
-						<th>Rank</th>
-                    <th>Player</th>
-                    <th>ELO</th>
-                </tr>
-            </thead>
-            <tbody id="scoreboard-body"></tbody>
-        </table>
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>ELO</th>
+            <th>Matches</th>
+            <th>Wins</th>
+            <th>Losses</th>
+        </tr>
+    </thead>
+    <tbody id="scoreboard-body"></tbody>
+</table>
 
         <h2>Match History</h2>
         <table>
@@ -185,7 +188,7 @@ function addPlayer() {
     const playerName = document.getElementById("new-player-name").value.trim();
     if (!playerName || players[playerName]) return;
 
-    players[playerName] = { elo: 1000 };
+    players[playerName] = { elo: 1000, matches: 0, wins: 0, losses: 0 };
 
     refreshPlayerList();
     updateScoreboard();
@@ -222,6 +225,17 @@ function submitMatch() {
     players[player1].elo += K * (result1 - expected1);
     players[player2].elo += K * (result2 - expected2);
 
+    players[player1].matches++;
+    players[player2].matches++;
+
+    if (result1 === 1) {
+        players[player1].wins++;
+        players[player2].losses++;
+    } else if (result2 === 1) {
+        players[player2].wins++;
+        players[player1].losses++;
+    }
+
     matchHistory.push({ player1, player2, score1, score2 });
 
     const row = document.createElement("tr");
@@ -237,9 +251,14 @@ function updateScoreboard() {
     scoreboardBody.innerHTML = "";
     const sortedPlayers = Object.entries(players).sort(([, a], [, b]) => b.elo - a.elo);
 
-    sortedPlayers.forEach(([player, { elo }], index) => {
+    sortedPlayers.forEach(([player, { elo, matches, wins, losses }], index) => {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${index + 1}</td><td>${player}</td><td>${Math.round(elo)}</td>`;
+        row.innerHTML = `<td>${index + 1}</td>
+                         <td>${player}</td>
+                         <td>${Math.round(elo)}</td>
+                         <td>${matches}</td>
+                         <td>${wins}</td>
+                         <td>${losses}</td>`;
         scoreboardBody.appendChild(row);
     });
 }
