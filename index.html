@@ -265,18 +265,15 @@ function loadMatchHistory() {
 }
 
 function exportData() {
-    alert("a")
     const data = { players, matchHistory };
+    alert(data);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    alert("b")
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = "elo_data.json";
-    alert("c")
     link.click();
     URL.revokeObjectURL(url);
-    alert("d")
 }
 
 function importData(event) {
