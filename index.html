@@ -251,6 +251,8 @@ function submitMatch() {
 function updateScoreboard() {
     scoreboardBody.innerHTML = "";
     Object.entries(players).sort(([, a], [, b]) => b.elo - a.elo).forEach(([player, { elo = 1000, matches = 0, wins = 0, losses = 0 }], index) => {
+        alert(player)
+        alert(wins)
         scoreboardBody.innerHTML += `<tr><td>${index + 1}</td><td>${player}</td><td>${Math.round(elo)}</td><td>${matches}</td><td>${wins}</td><td>${losses}</td></tr>`;
     });
 }
