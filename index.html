@@ -139,18 +139,18 @@
 
         <h2>Scoreboard</h2>
         <table>
-    <thead>
-        <tr>
-            <th>Rank</th>
-            <th>Player</th>
-            <th>ELO</th>
-            <th>Matches</th>
-            <th>Wins</th>
-            <th>Losses</th>
-        </tr>
-    </thead>
-    <tbody id="scoreboard-body"></tbody>
-</table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>ELO</th>
+                    <th>Matches</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                </tr>
+            </thead>
+            <tbody id="scoreboard-body"></tbody>
+        </table>
 
         <h2>Match History</h2>
         <table>
@@ -188,7 +188,12 @@ function addPlayer() {
     const playerName = document.getElementById("new-player-name").value.trim();
     if (!playerName || players[playerName]) return;
 
-    players[playerName] = { elo: 1000, matches: 0, wins: 0, losses: 0 };
+    players[playerName] = {
+        elo: 1000,
+        matches: 0,
+        wins: 0,
+        losses: 0
+    };
 
     refreshPlayerList();
     updateScoreboard();
@@ -238,10 +243,6 @@ function submitMatch() {
 
     matchHistory.push({ player1, player2, score1, score2 });
 
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${player1}</td><td>${player2}</td><td>${score1} - ${score2}</td>`;
-    matchHistoryBody.appendChild(row);
-
     updateScoreboard();
     saveData();
     document.getElementById("match-form").reset();
@@ -249,66 +250,14 @@ function submitMatch() {
 
 function updateScoreboard() {
     scoreboardBody.innerHTML = "";
-    const sortedPlayers = Object.entries(players).sort(([, a], [, b]) => b.elo - a.elo);
-
-    sortedPlayers.forEach(([player, { elo, matches, wins, losses }], index) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${index + 1}</td>
-                         <td>${player}</td>
-                         <td>${Math.round(elo)}</td>
-                         <td>${matches}</td>
-                         <td>${wins}</td>
-                         <td>${losses}</td>`;
-        scoreboardBody.appendChild(row);
+    Object.entries(players).sort(([, a], [, b]) => b.elo - a.elo).forEach(([player, { elo = 1000, matches = 0, wins = 0, losses = 0 }], index) => {
+        scoreboardBody.innerHTML += `<tr><td>${index + 1}</td><td>${player}</td><td>${Math.round(elo)}</td><td>${matches}</td><td>${wins}</td><td>${losses}</td></tr>`;
     });
-}
-
-function loadMatchHistory() {
-    matchHistoryBody.innerHTML = "";
-    matchHistory.forEach(({ player1, player2, score1, score2 }) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${player1}</td><td>${player2}</td><td>${score1} - ${score2}</td>`;
-        matchHistoryBody.appendChild(row);
-    });
-}
-
-function exportData() {
-    const data = { players, matchHistory };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "elo_data.json";
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const data = JSON.parse(e.target.result);
-
-        Object.keys(players).forEach(player => delete players[player]);
-        matchHistory.splice(0, matchHistory.length);
-
-        Object.assign(players, data.players);
-        matchHistory.push(...data.matchHistory);
-
-        saveData();
-        refreshPlayerList();
-        updateScoreboard();
-        loadMatchHistory();
-    };
-    reader.readAsText(file);
 }
 
 function initialize() {
     refreshPlayerList();
     updateScoreboard();
-    loadMatchHistory();
 }
 
 initialize();
