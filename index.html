@@ -13,13 +13,11 @@
             color: #333;
         }
 
-
         h1, h2 {
             text-align: center;
             margin-bottom: 20px;
             color: #4A90E2;
         }
-
 
         .container {
             max-width: 800px;
@@ -30,18 +28,15 @@
             border-radius: 10px;
         }
 
-
         .form-group {
             margin-bottom: 15px;
         }
-
 
         label {
             display: block;
             font-weight: bold;
             margin-bottom: 5px;
         }
-
 
         input, select, textarea, button {
             width: 100%;
@@ -52,7 +47,6 @@
             border-radius: 5px;
         }
 
-
         button {
             background-color: #4A90E2;
             color: white;
@@ -60,7 +54,6 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-
 
         button:hover {
             background-color: #357ABD;
@@ -77,6 +70,16 @@
             background-color: #C0392B;
         }
 
+        button.revert-btn {
+            background-color: #F39C12;
+            width: auto;
+            padding: 5px 10px;
+            margin: 2px;
+        }
+
+        button.revert-btn:hover {
+            background-color: #D68910;
+        }
 
         table {
             width: 100%;
@@ -84,31 +87,26 @@
             margin-top: 20px;
         }
 
-
         th, td {
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
 
-
         th {
             background-color: #4A90E2;
             color: white;
         }
 
-
         td {
             background-color: #f9f9f9;
         }
-
 
         .action-buttons {
             display: flex;
             justify-content: space-between;
             margin-top: 20px;
         }
-
 
         .hidden-input {
             display: none;
@@ -118,16 +116,18 @@
             text-align: center;
         }
 
+        .action-column {
+            text-align: center;
+        }
+
         @media (max-width: 600px) {
             h1, h2 {
                 font-size: 1.5rem;
             }
 
-
             input, select, textarea, button {
                 font-size: 14px;
             }
-
 
             th, td {
                 font-size: 14px;
@@ -139,7 +139,6 @@
     <div class="container">
         <h1>ELO Score Calculator</h1>
 
-
         <form id="add-player-form">
             <div class="form-group">
                 <label for="new-player-name">Add New Player:</label>
@@ -147,7 +146,6 @@
             </div>
             <button type="button" onclick="addPlayer()">Add Player</button>
         </form>
-
 
         <form id="match-form">
             <div class="form-group">
@@ -169,7 +167,6 @@
             <button type="button" onclick="submitMatch()">Submit Match</button>
         </form>
 
-
         <h2>Scoreboard</h2>
         <table>
             <thead>
@@ -186,7 +183,6 @@
             <tbody id="scoreboard-body"></tbody>
         </table>
 
-
         <h2>Match History</h2>
         <table>
             <thead>
@@ -194,11 +190,11 @@
                     <th>Player 1</th>
                     <th>Player 2</th>
                     <th>Score</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="match-history-body"></tbody>
         </table>
-
 
         <div class="action-buttons">
             <button type="button" onclick="exportData()">Export JSON</button>
@@ -206,7 +202,6 @@
             <input type="file" id="import-file" class="hidden-input" accept="application/json" onchange="importData(event)">
         </div>
     </div>
-
 
 <script>
 const players = JSON.parse(localStorage.getItem("playersXXX")) || {};
@@ -216,17 +211,14 @@ const scoreboardBody = document.getElementById("scoreboard-body");
 const matchHistoryBody = document.getElementById("match-history-body");
 const K = 20;
 
-
 function saveData() {
     localStorage.setItem("players", JSON.stringify(players));
     localStorage.setItem("matchHistory", JSON.stringify(matchHistory));
 }
 
-
 function addPlayer() {
     const playerName = document.getElementById("new-player-name").value.trim();
     if (!playerName || players[playerName]) return;
-
 
     players[playerName] = {
         elo: 1000,
@@ -235,13 +227,11 @@ function addPlayer() {
         losses: 0
     };
 
-
     refreshPlayerList();
     updateScoreboard();
     saveData();
     document.getElementById("new-player-name").value = "";
 }
-
 
 function removePlayer(playerName) {
     if (confirm(`Are you sure you want to remove ${playerName}? This will also remove all their match history.`)) {
@@ -260,7 +250,6 @@ function removePlayer(playerName) {
     }
 }
 
-
 function refreshPlayerList() {
     playerSelects.forEach(select => {
         select.innerHTML = "";
@@ -273,32 +262,35 @@ function refreshPlayerList() {
     });
 }
 
-
 function submitMatch() {
     const player1 = document.getElementById("player1").value;
     const player2 = document.getElementById("player2").value;
     const score1 = parseInt(document.getElementById("score1").value, 10);
     const score2 = parseInt(document.getElementById("score2").value, 10);
 
-
     if (!player1 || !player2 || isNaN(score1) || isNaN(score2) || player1 === player2) return;
 
+    // Save current stats before update
+    const elo1Before = players[player1].elo;
+    const elo2Before = players[player2].elo;
+    const matches1Before = players[player1].matches;
+    const matches2Before = players[player2].matches;
+    const wins1Before = players[player1].wins;
+    const wins2Before = players[player2].wins;
+    const losses1Before = players[player1].losses;
+    const losses2Before = players[player2].losses;
 
     const result1 = score1 > score2 ? 1 : score1 === score2 ? 0.5 : 0;
     const result2 = 1 - result1;
 
-
     const expected1 = 1 / (1 + Math.pow(10, (players[player2].elo - players[player1].elo) / 400));
     const expected2 = 1 / (1 + Math.pow(10, (players[player1].elo - players[player2].elo) / 400));
-
 
     players[player1].elo += K * (result1 - expected1);
     players[player2].elo += K * (result2 - expected2);
 
-
     players[player1].matches++;
     players[player2].matches++;
-
 
     if (result1 === 1) {
         players[player1].wins++;
@@ -308,33 +300,67 @@ function submitMatch() {
         players[player1].losses++;
     }
 
-
-    matchHistory.push({ player1, player2, score1, score2 });
-
+    // Save match with stats snapshots
+    matchHistory.push({
+        player1, player2, score1, score2,
+        elo1Before, elo2Before,
+        matches1Before, matches2Before,
+        wins1Before, wins2Before,
+        losses1Before, losses2Before
+    });
 
     updateScoreboard();
     saveData();
+    loadMatchHistory();
     document.getElementById("match-form").reset();
 }
 
+function revertMatch(index) {
+    if (index < 0 || index >= matchHistory.length) return;
+
+    const match = matchHistory[index];
+    const player1 = match.player1;
+    const player2 = match.player2;
+
+    // Restore saved stats
+    players[player1].elo = match.elo1Before;
+    players[player2].elo = match.elo2Before;
+
+    players[player1].matches = match.matches1Before;
+    players[player2].matches = match.matches2Before;
+
+    players[player1].wins = match.wins1Before;
+    players[player2].wins = match.wins2Before;
+
+    players[player1].losses = match.losses1Before;
+    players[player2].losses = match.losses2Before;
+
+    // Remove match from history
+    matchHistory.splice(index, 1);
+
+    updateScoreboard();
+    loadMatchHistory();
+    saveData();
+}
 
 function updateScoreboard() {
     scoreboardBody.innerHTML = "";
     Object.entries(players).sort(([, a], [, b]) => b.elo - a.elo).forEach(([player, { elo = 1000, matches = 0, wins = 0, losses = 0 }], index) => {
         scoreboardBody.innerHTML += `<tr><td>${index + 1}</td><td>${player}</td><td>${Math.round(elo)}</td><td>${matches}</td><td>${wins}</td><td>${losses}</td><td class="delete-column"><button class="delete-btn" type="button" onclick="removePlayer('${player}')">Remove</button></td></tr>`;
     });
+    loadMatchHistory()
 }
-
 
 function loadMatchHistory() {
     matchHistoryBody.innerHTML = "";
-    matchHistory.forEach(({ player1, player2, score1, score2 }) => {
+    matchHistory.forEach(({ player1, player2, score1, score2 }, index) => {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${player1}</td><td>${player2}</td><td>${score1} - ${score2}</td>`;
+        const isLast = index === matchHistory.length - 1;
+        row.innerHTML = `<td>${player1}</td><td>${player2}</td><td>${score1} - ${score2}</td>` +
+            (isLast ? `<td class="action-column"><button class="revert-btn" type="button" onclick="revertMatch(${index})">Revert</button></td>` : `<td></td>`);
         matchHistoryBody.appendChild(row);
     });
 }
-
 
 function exportData() {
     const data = { players, matchHistory };
@@ -347,24 +373,19 @@ function exportData() {
     URL.revokeObjectURL(url);
 }
 
-
 function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
-
 
     const reader = new FileReader();
     reader.onload = (e) => {
         const data = JSON.parse(e.target.result);
 
-
         Object.keys(players).forEach(player => delete players[player]);
         matchHistory.splice(0, matchHistory.length);
 
-
         Object.assign(players, data.players);
         matchHistory.push(...data.matchHistory);
-
 
         saveData();
         refreshPlayerList();
@@ -374,12 +395,11 @@ function importData(event) {
     reader.readAsText(file);
 }
 
-
 function initialize() {
     refreshPlayerList();
     updateScoreboard();
+    loadMatchHistory();
 }
-
 
 initialize();
 </script>
