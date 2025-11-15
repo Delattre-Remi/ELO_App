@@ -59,28 +59,6 @@
             background-color: #357ABD;
         }
 
-        button.delete-btn {
-            background-color: #E74C3C;
-            width: auto;
-            padding: 5px 10px;
-            margin: 2px;
-        }
-
-        button.delete-btn:hover {
-            background-color: #C0392B;
-        }
-
-        button.revert-btn {
-            background-color: #F39C12;
-            width: auto;
-            padding: 5px 10px;
-            margin: 2px;
-        }
-
-        button.revert-btn:hover {
-            background-color: #D68910;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -110,14 +88,6 @@
 
         .hidden-input {
             display: none;
-        }
-
-        .delete-column {
-            text-align: center;
-        }
-
-        .action-column {
-            text-align: center;
         }
 
         @media (max-width: 600px) {
@@ -177,7 +147,6 @@
                     <th>Matches</th>
                     <th>Wins</th>
                     <th>Losses</th>
-                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="scoreboard-body"></tbody>
@@ -190,7 +159,6 @@
                     <th>Player 1</th>
                     <th>Player 2</th>
                     <th>Score</th>
-                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="match-history-body"></tbody>
@@ -233,23 +201,6 @@ function addPlayer() {
     document.getElementById("new-player-name").value = "";
 }
 
-function removePlayer(playerName) {
-    if (confirm(`Are you sure you want to remove ${playerName}? This will also remove all their match history.`)) {
-        delete players[playerName];
-        
-        const filteredHistory = matchHistory.filter(match => 
-            match.player1 !== playerName && match.player2 !== playerName
-        );
-        matchHistory.splice(0, matchHistory.length);
-        matchHistory.push(...filteredHistory);
-        
-        refreshPlayerList();
-        updateScoreboard();
-        loadMatchHistory();
-        saveData();
-    }
-}
-
 function refreshPlayerList() {
     playerSelects.forEach(select => {
         select.innerHTML = "";
@@ -269,16 +220,6 @@ function submitMatch() {
     const score2 = parseInt(document.getElementById("score2").value, 10);
 
     if (!player1 || !player2 || isNaN(score1) || isNaN(score2) || player1 === player2) return;
-
-    // Save current stats before update
-    const elo1Before = players[player1].elo;
-    const elo2Before = players[player2].elo;
-    const matches1Before = players[player1].matches;
-    const matches2Before = players[player2].matches;
-    const wins1Before = players[player1].wins;
-    const wins2Before = players[player2].wins;
-    const losses1Before = players[player1].losses;
-    const losses2Before = players[player2].losses;
 
     const result1 = score1 > score2 ? 1 : score1 === score2 ? 0.5 : 0;
     const result2 = 1 - result1;
@@ -300,64 +241,25 @@ function submitMatch() {
         players[player1].losses++;
     }
 
-    // Save match with stats snapshots
-    matchHistory.push({
-        player1, player2, score1, score2,
-        elo1Before, elo2Before,
-        matches1Before, matches2Before,
-        wins1Before, wins2Before,
-        losses1Before, losses2Before
-    });
+    matchHistory.push({ player1, player2, score1, score2 });
 
     updateScoreboard();
     saveData();
-    loadMatchHistory();
     document.getElementById("match-form").reset();
-}
-
-function revertMatch(index) {
-    if (index < 0 || index >= matchHistory.length) return;
-
-    const match = matchHistory[index];
-    const player1 = match.player1;
-    const player2 = match.player2;
-
-    // Restore saved stats
-    players[player1].elo = match.elo1Before;
-    players[player2].elo = match.elo2Before;
-
-    players[player1].matches = match.matches1Before;
-    players[player2].matches = match.matches2Before;
-
-    players[player1].wins = match.wins1Before;
-    players[player2].wins = match.wins2Before;
-
-    players[player1].losses = match.losses1Before;
-    players[player2].losses = match.losses2Before;
-
-    // Remove match from history
-    matchHistory.splice(index, 1);
-
-    updateScoreboard();
-    loadMatchHistory();
-    saveData();
 }
 
 function updateScoreboard() {
     scoreboardBody.innerHTML = "";
     Object.entries(players).sort(([, a], [, b]) => b.elo - a.elo).forEach(([player, { elo = 1000, matches = 0, wins = 0, losses = 0 }], index) => {
-        scoreboardBody.innerHTML += `<tr><td>${index + 1}</td><td>${player}</td><td>${Math.round(elo)}</td><td>${matches}</td><td>${wins}</td><td>${losses}</td><td class="delete-column"><button class="delete-btn" type="button" onclick="removePlayer('${player}')">Remove</button></td></tr>`;
+        scoreboardBody.innerHTML += `<tr><td>${index + 1}</td><td>${player}</td><td>${Math.round(elo)}</td><td>${matches}</td><td>${wins}</td><td>${losses}</td></tr>`;
     });
-    loadMatchHistory()
 }
 
 function loadMatchHistory() {
     matchHistoryBody.innerHTML = "";
-    matchHistory.forEach(({ player1, player2, score1, score2 }, index) => {
+    matchHistory.forEach(({ player1, player2, score1, score2 }) => {
         const row = document.createElement("tr");
-        const isLast = index === matchHistory.length - 1;
-        row.innerHTML = `<td>${player1}</td><td>${player2}</td><td>${score1} - ${score2}</td>` +
-            (isLast ? `<td class="action-column"><button class="revert-btn" type="button" onclick="revertMatch(${index})">Revert</button></td>` : `<td></td>`);
+        row.innerHTML = `<td>${player1}</td><td>${player2}</td><td>${score1} - ${score2}</td>`;
         matchHistoryBody.appendChild(row);
     });
 }
@@ -398,7 +300,6 @@ function importData(event) {
 function initialize() {
     refreshPlayerList();
     updateScoreboard();
-    loadMatchHistory();
 }
 
 initialize();
